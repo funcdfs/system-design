@@ -8,10 +8,16 @@
 - **`refs/` — 引用子块**：一个概念一篇的"词汇表"，由 case 按需链接，不在 case 里重复展开：
   - [`foundations/`](refs/foundations/) — 基础理论：CAP、一致性模型、时钟与序
   - [`storage/`](refs/storage/) — 存储选型：SQL / NoSQL / 时序 / 对象存储
+    - [`wide-column.md`](refs/storage/wide-column.md) — 宽列存储（Cassandra / HBase 模型）与它放弃的东西
   - [`cache/`](refs/cache/) — 缓存：一致性、雪崩 / 穿透 / 击穿
   - [`messaging/`](refs/messaging/) — 消息队列：投递语义、顺序、幂等
+    - [`realtime-channel.md`](refs/messaging/realtime-channel.md) — 实时下行通道：WebSocket / 长轮询 / SSE / 厂商推送
+    - [`delivery-semantics.md`](refs/messaging/delivery-semantics.md) — 投递语义：at-most / at-least / exactly-once
+    - [`idempotency.md`](refs/messaging/idempotency.md) — 幂等与去重：键设计、分层去重
+    - [`ordering.md`](refs/messaging/ordering.md) — 消息顺序：分区有序、单调 seq、时钟方案
   - [`coordination/`](refs/coordination/) — 分布式协调：锁、共识、选举
   - [`patterns/`](refs/patterns/) — 架构模式：分库分表、CQRS、读写分离
+    - [`fan-out.md`](refs/patterns/fan-out.md) — 写扩散 vs 读扩散：受众规模决定分岔
   - [`resilience/`](refs/resilience/) — 稳定性：限流、熔断、降级、重试 / 超时预算
 - **`templates/`** — 写作模板，新增文章从这里复制。
 
@@ -23,7 +29,7 @@
 
 | 领域 | 案例 | 一句话结论 |
 | ---- | ---- | ---------- |
-| —    | 暂无案例，第一篇 case 诞生后在此登记 | — |
+| 社交 | [social-messenger](cases/social-messenger.md) | 长连接网关 + 会话分区宽列存储 + at-least-once/端侧去重；顺序只承诺会话内有序，用 seq 在端侧收敛 |
 
 ## 阅读方式
 
