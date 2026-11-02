@@ -24,12 +24,12 @@
 
 <!-- 纪律：只写本场景怎么取舍，共性概念链接 refs，不在此展开 -->
 
-- **在线投递通道怎么选**：100M 并发连接 + p99 < 100ms，轮询类方案（延迟被轮询间隔支配）直接出局；厂商推送延迟秒级、到达率不承诺，只配做离线唤醒，不配做主通道。本场景取舍：WebSocket 长连接为主，APNs/FCM 兜底。通道谱系对比详见 [实时下行通道](../refs/messaging/realtime-channel.md)
-- **离线用户怎么保证最终送达**：服务端对发送方的 ack 只承诺"已持久化"，不承诺"对端已见"；接收侧靠 ack + 有限次重试 + 离线收件箱（存储即收件箱，上线按位点拉取）。本场景取舍：at-least-once，把"恰好一次"从服务端承诺里移出去。语义谱系详见 [投递语义](../refs/messaging/delivery-semantics.md)
-- **重试必然带来重复，怎么去重**：message_id 由发送端生成（UUID），重试复用同一 id；端侧按 id 做短期 LRU 去重即可，服务端不做逐条查库去重（写路径省一次往返，100ms 预算留给推送）。详见 [幂等与去重](../refs/messaging/idempotency.md)
-- **顺序与多端同步**：不承诺全局有序（等于把所有会话序列化到一个点，116K msg/s 不可行），只承诺会话内有序：按 conversation_id 分区路由 + 会话内单调 seq；接收端发现 seq 空洞回源补齐；每端维护各自已确认的连续位点，换端上线从位点续传。方案谱系详见 [消息顺序](../refs/messaging/ordering.md)
-- **群聊扩散写还是读**：写扩散延迟好但写放大 ×N——2000 人群一条消息就是 2000 次写，直接打死存储；读扩散写路径 O(1) 但读要聚合。本场景取舍：百人级以下群写扩散（每人收件箱一份），万人群读扩散（存一份、成员拉），分档阈值可配置。判断框架详见 [写扩散 vs 读扩散](../refs/patterns/fan-out.md)
-- **消息存哪、存多久**：负载画像是高吞吐 append-only 写 + 按（会话, 消息）点查/范围扫，没有 join 与跨行事务诉求 → 宽列存储（Cassandra 系），以 conversation_id 作分区键、seq 作聚簇键；保留策略用存储原生 TTL 实现（默认永存，用户/群可设自动删除）。存储谱系详见 [宽列存储](../refs/storage/wide-column.md)
+- **在线投递通道怎么选**：100M 并发连接 + p99 < 100ms，轮询类方案（延迟被轮询间隔支配）直接出局；厂商推送延迟秒级、到达率不承诺，只配做离线唤醒，不配做主通道。本场景取舍：WebSocket 长连接为主，APNs/FCM 兜底。通道谱系对比详见 [实时下行通道](../引用/消息队列/realtime-channel.md)
+- **离线用户怎么保证最终送达**：服务端对发送方的 ack 只承诺"已持久化"，不承诺"对端已见"；接收侧靠 ack + 有限次重试 + 离线收件箱（存储即收件箱，上线按位点拉取）。本场景取舍：at-least-once，把"恰好一次"从服务端承诺里移出去。语义谱系详见 [投递语义](../引用/消息队列/delivery-semantics.md)
+- **重试必然带来重复，怎么去重**：message_id 由发送端生成（UUID），重试复用同一 id；端侧按 id 做短期 LRU 去重即可，服务端不做逐条查库去重（写路径省一次往返，100ms 预算留给推送）。详见 [幂等与去重](../引用/消息队列/idempotency.md)
+- **顺序与多端同步**：不承诺全局有序（等于把所有会话序列化到一个点，116K msg/s 不可行），只承诺会话内有序：按 conversation_id 分区路由 + 会话内单调 seq；接收端发现 seq 空洞回源补齐；每端维护各自已确认的连续位点，换端上线从位点续传。方案谱系详见 [消息顺序](../引用/消息队列/ordering.md)
+- **群聊扩散写还是读**：写扩散延迟好但写放大 ×N——2000 人群一条消息就是 2000 次写，直接打死存储；读扩散写路径 O(1) 但读要聚合。本场景取舍：百人级以下群写扩散（每人收件箱一份），万人群读扩散（存一份、成员拉），分档阈值可配置。判断框架详见 [写扩散 vs 读扩散](../引用/架构模式/fan-out.md)
+- **消息存哪、存多久**：负载画像是高吞吐 append-only 写 + 按（会话, 消息）点查/范围扫，没有 join 与跨行事务诉求 → 宽列存储（Cassandra 系），以 conversation_id 作分区键、seq 作聚簇键；保留策略用存储原生 TTL 实现（默认永存，用户/群可设自动删除）。存储谱系详见 [宽列存储](../引用/存储/wide-column.md)
 
 ## 方案对比
 
@@ -97,7 +97,7 @@ sequenceDiagram
 
 ## 延伸
 
-- **关联案例**：暂无。TODO：`social-news-feed`（Feed 流）落地时应复用 [写扩散 vs 读扩散](../refs/patterns/fan-out.md) 与 [宽列存储](../refs/storage/wide-column.md)，不要重新展开
+- **关联案例**：暂无。TODO：`social-news-feed`（Feed 流）落地时应复用 [写扩散 vs 读扩散](../引用/架构模式/fan-out.md) 与 [宽列存储](../引用/存储/wide-column.md)，不要重新展开
 - **参考资料**：
   - [systemdesign.io: Design Facebook Messenger or WhatsApp](https://systemdesign.io/question/design-facebook-messenger-or-whatsapp)（本案例起始题目）
   - [Hayk Simonyan: System Design Interview — Design WhatsApp](https://hayksimonyan.substack.com/p/system-design-interview-design-whatsapp)（容量数字的参考来源）
